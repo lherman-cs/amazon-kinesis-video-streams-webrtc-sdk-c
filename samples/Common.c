@@ -727,7 +727,9 @@ STATUS sessionCleanupWait(PSampleConfiguration pSampleConfiguration)
     MUTEX_LOCK(pSampleConfiguration->sampleConfigurationObjLock);
     locked = TRUE;
 
-    while (!ATOMIC_LOAD_BOOL(&pSampleConfiguration->interrupted)) {
+    // while (!ATOMIC_LOAD_BOOL(&pSampleConfiguration->interrupted)) {
+    for (int z = 0; z < 10 && !ATOMIC_LOAD_BOOL(&pSampleConfiguration->interrupted); z++) {
+        printf("POOP: %d\n", z);
         // scan and cleanup terminated streaming session
         for (i = 0; i < pSampleConfiguration->streamingSessionCount; ++i) {
             if (ATOMIC_LOAD_BOOL(&pSampleConfiguration->sampleStreamingSessionList[i]->terminateFlag)) {
