@@ -228,6 +228,17 @@ CleanUp:
     return (PVOID) (ULONG_PTR) retStatus;
 }
 
+VOID onGstVideoFrameReady(UINT64 customData, PFrame pFrame)
+{
+	GstFlowReturn ret;
+	GstBuffer *buffer;
+	GstElement *appsrcVideo = (GstElement *)customData;
+	buffer = gst_buffer_new_and_alloc(pFrame->size);
+	gst_buffer_fill(buffer, 0, pFrame->frameData, pFrame->size);
+	g_signal_emit_by_name(appsrcVideo, "push-buffer", buffer, &ret);
+	gst_buffer_unref(buffer);
+}
+
 VOID onGstAudioFrameReady(UINT64 customData, PFrame pFrame)
 {
     GstFlowReturn ret;
@@ -257,7 +268,7 @@ VOID onSampleStreamingSessionShutdown(UINT64 customData, PSampleStreamingSession
 PVOID receiveGstreamerAudioVideo(PVOID args)
 {
     STATUS retStatus = STATUS_SUCCESS;
-    GstElement *pipeline = NULL, *appsrcAudio = NULL;
+    GstElement *pipeline = NULL, *appsrcVideo, *appsrcAudio = NULL;
     GstBus *bus;
     GstMessage *msg;
     GError *error = NULL;
@@ -270,6 +281,7 @@ PVOID receiveGstreamerAudioVideo(PVOID args)
     }
 
     //TODO: Wire video up with gstreamer pipeline
+    videoDescription = "appsrc name=appsrc-video ! queue ! h264parse ! avdec_h264 ! videoconvert ! video/x-raw, format=BGRx ! queue ! videoconvert ! xvimagesink";
 
     switch (pSampleStreamingSession->pAudioRtcRtpTransceiver->receiver.track.codec) {
         case RTC_CODEC_OPUS:
@@ -288,12 +300,21 @@ PVOID receiveGstreamerAudioVideo(PVOID args)
 
     pipeline = gst_parse_launch(audioVideoDescription, &error);
 
+    appsrcVideo = gst_bin_get_by_name(GST_BIN(pipeline), "appsrc-video");
+    if(appsrcVideo == NULL) {
+        printf("[KVS GStreamer Master] gst_bin_get_by_name(): cant find appsrc, operation returned status code: 0x%08x \n", STATUS_INTERNAL_ERROR);
+        goto CleanUp;
+    }
+
     appsrcAudio = gst_bin_get_by_name(GST_BIN(pipeline), "appsrc-audio");
     if(appsrcAudio == NULL) {
         printf("[KVS GStreamer Master] gst_bin_get_by_name(): cant find appsrc, operation returned status code: 0x%08x \n", STATUS_INTERNAL_ERROR);
         goto CleanUp;
     }
 
+    transceiverOnFrame(pSampleStreamingSession->pVideoRtcRtpTransceiver,
+                       (UINT64) appsrcVideo,
+                       onGstAudioFrameReady);
     transceiverOnFrame(pSampleStreamingSession->pAudioRtcRtpTransceiver,
                        (UINT64) appsrcAudio,
                        onGstAudioFrameReady);
