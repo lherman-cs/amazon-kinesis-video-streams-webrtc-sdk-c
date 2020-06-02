@@ -499,7 +499,7 @@ STATUS dtlsSessionProcessPacket(PDtlsSession pDtlsSession, PBYTE pData, PINT32 p
 
     // should clear error before SSL_read: https://stackoverflow.com/a/47218133
     ERR_clear_error();
-    sslRet = SSL_read(pDtlsSession->pSsl, pData, *pDataLen);
+    dataLen = SSL_read(pDtlsSession->pSsl, pData, *pDataLen);
 
     if (sslRet == 0 && SSL_get_error(pDtlsSession->pSsl, sslRet) == SSL_ERROR_ZERO_RETURN) {
         DLOGD("Detected DTLS close_notify alert");
@@ -512,7 +512,7 @@ STATUS dtlsSessionProcessPacket(PDtlsSession pDtlsSession, PBYTE pData, PINT32 p
         CHK_STATUS(dtlsCheckOutgoingDataBuffer(pDtlsSession));
     } else {
         // if dtls handshake is done, and SSL_read did not fail, then sslRet and number of sctp bytes read
-        dataLen = sslRet < 0 ? 0 : sslRet;
+        dataLen = sslRet < 0 ? 0 : dataLen;
     }
 
     if (isClosed) {
