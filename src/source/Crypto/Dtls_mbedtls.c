@@ -201,16 +201,22 @@ STATUS dtlsTransmissionTimerCallback(UINT32 timerID, UINT64 currentTime, UINT64 
     locked = TRUE;
 
     handshakeStatus = mbedtls_ssl_handshake(&pDtlsSession->sslCtx);
-    if (handshakeStatus == 0) {
-        CHK_STATUS(dtlsSessionChangeState(pDtlsSession, CONNECTED));
-        CHK(FALSE, STATUS_TIMER_QUEUE_STOP_SCHEDULING);
-    } else if (handshakeStatus == MBEDTLS_ERR_SSL_WANT_READ || handshakeStatus == MBEDTLS_ERR_SSL_WANT_WRITE) {
-        // No need to do anything when mbedtls needs more data. Another thread will provide the data.
-        CHK(FALSE, STATUS_SUCCESS);
-    } else {
-        LOG_MBEDTLS_ERROR("mbedtls_ssl_handshake", handshakeStatus);
-        CHK_STATUS(dtlsSessionChangeState(pDtlsSession, FAILED));
-        CHK(FALSE, STATUS_TIMER_QUEUE_STOP_SCHEDULING);
+    switch (handshakeStatus) {
+        case 0:
+            CHK_STATUS(dtlsSessionChangeState(pDtlsSession, CONNECTED));
+            CHK(FALSE, STATUS_TIMER_QUEUE_STOP_SCHEDULING);
+            break;
+        case MBEDTLS_ERR_SSL_WANT_READ:
+        /* explicit fallthrough */
+        case MBEDTLS_ERR_SSL_WANT_WRITE:
+            // No need to do anything when mbedtls needs more data. Another thread will provide the data.
+            CHK(FALSE, STATUS_SUCCESS);
+            break;
+        default:
+            LOG_MBEDTLS_ERROR("mbedtls_ssl_handshake", handshakeStatus);
+            CHK_STATUS(dtlsSessionChangeState(pDtlsSession, FAILED));
+            CHK(FALSE, STATUS_TIMER_QUEUE_STOP_SCHEDULING);
+            break;
     }
 
 CleanUp:
