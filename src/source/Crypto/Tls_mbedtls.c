@@ -141,6 +141,7 @@ STATUS tlsSessionProcessPacket(PTlsSession pTlsSession, PBYTE pData, UINT32 buff
     ENTERS();
     STATUS retStatus = STATUS_SUCCESS;
     INT32 sslRet, readBytes = 0;
+    BOOL iterate = TRUE;
     PIOBuffer pReadBuffer;
 
     CHK(pTlsSession != NULL && pData != NULL && pDataLen != NULL, STATUS_NULL_ARG);
@@ -151,7 +152,7 @@ STATUS tlsSessionProcessPacket(PTlsSession pTlsSession, PBYTE pData, UINT32 buff
     CHK_STATUS(ioBufferWrite(pReadBuffer, pData, *pDataLen));
 
     // read application data
-    while (pReadBuffer->off < pReadBuffer->len && bufferLen > 0) {
+    while (iterate && pReadBuffer->off < pReadBuffer->len && bufferLen > 0) {
         sslRet = mbedtls_ssl_read(&pTlsSession->sslCtx, pData + readBytes, bufferLen);
         if (sslRet > 0) {
             readBytes += sslRet;
@@ -162,14 +163,14 @@ STATUS tlsSessionProcessPacket(PTlsSession pTlsSession, PBYTE pData, UINT32 buff
             // In either case, we'll make sure that the state will change to CLOSED. If it's already closed, it'll be just a noop.
             DLOGD("Detected TLS close_notify alert");
             CHK_STATUS(tlsSessionShutdown(pTlsSession));
-            break;
+            iterate = FALSE;
         } else if (sslRet == MBEDTLS_ERR_SSL_WANT_READ || sslRet == MBEDTLS_ERR_SSL_WANT_WRITE) {
-            break;
+            iterate = FALSE;
         } else {
             LOG_MBEDTLS_ERROR("mbedtls_ssl_read", sslRet);
             readBytes = 0;
             retStatus = STATUS_INTERNAL_ERROR;
-            break;
+            iterate = FALSE;
         }
     }
 
@@ -196,21 +197,22 @@ STATUS tlsSessionPutApplicationData(PTlsSession pTlsSession, PBYTE pData, UINT32
     ENTERS();
     STATUS retStatus = STATUS_SUCCESS;
     UINT32 writtenBytes = 0;
+    BOOL iterate = TRUE;
     INT32 sslRet;
 
     CHK(pTlsSession != NULL, STATUS_NULL_ARG);
 
-    while (writtenBytes < dataLen) {
+    while (iterate && writtenBytes < dataLen) {
         sslRet = mbedtls_ssl_write(&pTlsSession->sslCtx, pData + writtenBytes, dataLen - writtenBytes);
         if (sslRet > 0) {
             writtenBytes += sslRet;
         } else if (sslRet == MBEDTLS_ERR_SSL_WANT_READ || sslRet == MBEDTLS_ERR_SSL_WANT_WRITE) {
-            break;
+            iterate = FALSE;
         } else {
             LOG_MBEDTLS_ERROR("mbedtls_ssl_write", sslRet);
             writtenBytes = 0;
             retStatus = STATUS_INTERNAL_ERROR;
-            break;
+            iterate = FALSE;
         }
     }
 

@@ -324,6 +324,8 @@ STATUS dtlsSessionProcessPacket(PDtlsSession pDtlsSession, PBYTE pData, PINT32 p
     BOOL locked = FALSE;
     INT32 sslRet, readBytes = 0;
     PIOBuffer pReadBuffer;
+    BOOL iterate = TRUE;
+
     CHK(pDtlsSession != NULL && pData != NULL && pData != NULL, STATUS_NULL_ARG);
     CHK(ATOMIC_LOAD_BOOL(&pDtlsSession->isStarted), STATUS_SSL_PACKET_BEFORE_DTLS_READY);
     CHK(!ATOMIC_LOAD_BOOL(&pDtlsSession->shutdown), retStatus);
@@ -335,7 +337,7 @@ STATUS dtlsSessionProcessPacket(PDtlsSession pDtlsSession, PBYTE pData, PINT32 p
     CHK_STATUS(ioBufferWrite(pReadBuffer, pData, *pDataLen));
 
     // read application data
-    while (pReadBuffer->off < pReadBuffer->len) {
+    while (iterate && pReadBuffer->off < pReadBuffer->len) {
         sslRet = mbedtls_ssl_read(&pDtlsSession->sslCtx, pData + readBytes, pReadBuffer->len - pReadBuffer->off);
         if (sslRet > 0) {
             readBytes += sslRet;
@@ -345,14 +347,14 @@ STATUS dtlsSessionProcessPacket(PDtlsSession pDtlsSession, PBYTE pData, PINT32 p
             // In either case, we'll make sure that the state will change to CLOSED. If it's already closed, it'll be just a noop.
             DLOGD("Detected DTLS close_notify alert");
             CHK_STATUS(dtlsSessionShutdown(pDtlsSession));
-            break;
+            iterate = FALSE;
         } else if (sslRet == MBEDTLS_ERR_SSL_WANT_READ || sslRet == MBEDTLS_ERR_SSL_WANT_WRITE) {
-            break;
+            iterate = FALSE;
         } else {
             LOG_MBEDTLS_ERROR("mbedtls_ssl_read", sslRet);
             readBytes = 0;
             retStatus = STATUS_INTERNAL_ERROR;
-            break;
+            iterate = FALSE;
         }
     }
 
@@ -380,6 +382,7 @@ STATUS dtlsSessionPutApplicationData(PDtlsSession pDtlsSession, PBYTE pData, INT
     INT32 writtenBytes = 0;
     BOOL locked = FALSE;
     INT32 sslRet;
+    BOOL iterate = TRUE;
 
     CHK(pData != NULL, STATUS_NULL_ARG);
     CHK(!ATOMIC_LOAD_BOOL(&pDtlsSession->shutdown), retStatus);
@@ -387,17 +390,17 @@ STATUS dtlsSessionPutApplicationData(PDtlsSession pDtlsSession, PBYTE pData, INT
     MUTEX_LOCK(pDtlsSession->sslLock);
     locked = TRUE;
     
-    while (writtenBytes < dataLen) {
+    while (iterate && writtenBytes < dataLen) {
         sslRet = mbedtls_ssl_write(&pDtlsSession->sslCtx, pData + writtenBytes, dataLen - writtenBytes);
         if (sslRet > 0) {
             writtenBytes += sslRet;
         } else if (sslRet == MBEDTLS_ERR_SSL_WANT_READ || sslRet == MBEDTLS_ERR_SSL_WANT_WRITE) {
-            break;
+            iterate = FALSE;
         } else {
             LOG_MBEDTLS_ERROR("mbedtls_ssl_write", sslRet);
             writtenBytes = 0;
             retStatus = STATUS_INTERNAL_ERROR;
-            break;
+            iterate = FALSE;
         }
     }
 
