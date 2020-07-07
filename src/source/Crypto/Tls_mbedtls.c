@@ -69,36 +69,36 @@ CleanUp:
 
 INT32 tlsSessionSendCallback(PVOID customData, const unsigned char *buf, ULONG len)
 {
-  STATUS retStatus = STATUS_SUCCESS;
-  PTlsSession pTlsSession = (PTlsSession) customData;
+    STATUS retStatus = STATUS_SUCCESS;
+    PTlsSession pTlsSession = (PTlsSession) customData;
 
-  CHK(pTlsSession != NULL, STATUS_NULL_ARG);
+    CHK(pTlsSession != NULL, STATUS_NULL_ARG);
 
-  pTlsSession->callbacks.outboundPacketFn(pTlsSession->callbacks.outBoundPacketFnCustomData, (PBYTE) buf, len);
+    pTlsSession->callbacks.outboundPacketFn(pTlsSession->callbacks.outBoundPacketFnCustomData, (PBYTE) buf, len);
 
 CleanUp:
 
-  return STATUS_FAILED(retStatus) ? -retStatus : len;
+    return STATUS_FAILED(retStatus) ? -retStatus : len;
 }
 
 INT32 tlsSessionReceiveCallback(PVOID customData, unsigned char *buf, ULONG len)
 {
-  STATUS retStatus = STATUS_SUCCESS;
-  PTlsSession pTlsSession = (PTlsSession) customData;
-  PIOBuffer pBuffer;
-  UINT32 readBytes = MBEDTLS_ERR_SSL_WANT_READ;
+    STATUS retStatus = STATUS_SUCCESS;
+    PTlsSession pTlsSession = (PTlsSession) customData;
+    PIOBuffer pBuffer;
+    UINT32 readBytes = MBEDTLS_ERR_SSL_WANT_READ;
 
-  CHK(pTlsSession != NULL, STATUS_NULL_ARG);
+    CHK(pTlsSession != NULL, STATUS_NULL_ARG);
 
-  pBuffer = pTlsSession->pReadBuffer;
+    pBuffer = pTlsSession->pReadBuffer;
 
-  if (pBuffer->off < pBuffer->len) {
-      retStatus = ioBufferRead(pBuffer, buf, len, &readBytes);
-  }
+    if (pBuffer->off < pBuffer->len) {
+        retStatus = ioBufferRead(pBuffer, buf, len, &readBytes);
+    }
 
 CleanUp:
 
-  return STATUS_FAILED(retStatus) ? -retStatus : readBytes;
+    return STATUS_FAILED(retStatus) ? -retStatus : readBytes;
 }
 
 STATUS tlsSessionStart(PTlsSession pTlsSession, BOOL isServer)

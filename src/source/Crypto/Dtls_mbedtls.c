@@ -115,36 +115,36 @@ CleanUp:
 
 INT32 dtlsSessionSendCallback(PVOID customData, const unsigned char *pBuf, ULONG len)
 {
-  STATUS retStatus = STATUS_SUCCESS;
-  PDtlsSession pDtlsSession = (PDtlsSession) customData;
+    STATUS retStatus = STATUS_SUCCESS;
+    PDtlsSession pDtlsSession = (PDtlsSession) customData;
 
-  CHK(pDtlsSession != NULL, STATUS_NULL_ARG);
+    CHK(pDtlsSession != NULL, STATUS_NULL_ARG);
 
-  pDtlsSession->dtlsSessionCallbacks.outboundPacketFn(pDtlsSession->dtlsSessionCallbacks.outBoundPacketFnCustomData, (PBYTE) pBuf, len);
+    pDtlsSession->dtlsSessionCallbacks.outboundPacketFn(pDtlsSession->dtlsSessionCallbacks.outBoundPacketFnCustomData, (PBYTE) pBuf, len);
 
 CleanUp:
 
-  return STATUS_FAILED(retStatus) ? -retStatus : len;
+    return STATUS_FAILED(retStatus) ? -retStatus : len;
 }
 
 INT32 dtlsSessionReceiveCallback(PVOID customData, unsigned char *pBuf, ULONG len)
 {
-  STATUS retStatus = STATUS_SUCCESS;
-  PDtlsSession pDtlsSession = (PDtlsSession) customData;
-  PIOBuffer pBuffer;
-  UINT32 readBytes = MBEDTLS_ERR_SSL_WANT_READ;
+    STATUS retStatus = STATUS_SUCCESS;
+    PDtlsSession pDtlsSession = (PDtlsSession) customData;
+    PIOBuffer pBuffer;
+    UINT32 readBytes = MBEDTLS_ERR_SSL_WANT_READ;
 
-  CHK(pDtlsSession != NULL, STATUS_NULL_ARG);
+    CHK(pDtlsSession != NULL, STATUS_NULL_ARG);
 
-  pBuffer = pDtlsSession->pReadBuffer;
+    pBuffer = pDtlsSession->pReadBuffer;
 
-  if (pBuffer->off < pBuffer->len) {
-      CHK_STATUS(ioBufferRead(pBuffer, pBuf, len, &readBytes));
-  }
+    if (pBuffer->off < pBuffer->len) {
+        CHK_STATUS(ioBufferRead(pBuffer, pBuf, len, &readBytes));
+    }
 
 CleanUp:
 
-  return STATUS_FAILED(retStatus) ? -retStatus : readBytes;
+    return STATUS_FAILED(retStatus) ? -retStatus : readBytes;
 }
 
 // Provide mbedtls timer functionality for retransmission and timeout calculation
