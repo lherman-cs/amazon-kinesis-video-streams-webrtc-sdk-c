@@ -10,8 +10,7 @@ STATUS createTlsSession(PTlsSessionCallbacks pCallbacks, PTlsSession *ppTlsSessi
     STATUS retStatus = STATUS_SUCCESS;
     PTlsSession pTlsSession = NULL;
 
-    CHK(ppTlsSession != NULL && pCallbacks != NULL, STATUS_NULL_ARG);
-    CHK(pCallbacks->outboundPacketFn != NULL, STATUS_NULL_ARG);
+    CHK(ppTlsSession != NULL && pCallbacks != NULL && pCallbacks->outboundPacketFn != NULL, STATUS_NULL_ARG);
 
     pTlsSession = (PTlsSession) MEMCALLOC(1, SIZEOF(TlsSession));
     CHK(pTlsSession != NULL, STATUS_NOT_ENOUGH_MEMORY);
