@@ -45,6 +45,8 @@ struct __TlsSession {
     mbedtls_entropy_context entropy;
     mbedtls_ctr_drbg_context ctrDrbg;
     mbedtls_x509_crt cacert;
+#else
+#error "A Crypto implementation is required."
 #endif
 };
 
@@ -112,6 +114,8 @@ INT32 tlsSessionCertificateVerifyCallback(INT32, X509_STORE_CTX*);
 //       a callback signature.
 INT32 tlsSessionSendCallback(PVOID, const unsigned char*, ULONG);
 INT32 tlsSessionReceiveCallback(PVOID, unsigned char*, ULONG);
+#else
+#error "A Crypto implementation is required."
 #endif
 
 #ifdef  __cplusplus

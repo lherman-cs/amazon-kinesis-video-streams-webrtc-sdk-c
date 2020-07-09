@@ -41,6 +41,8 @@ typedef enum {
 #elif KVS_USE_MBEDTLS
    SRTP_PROFILE_AES128_CM_HMAC_SHA1_80 = MBEDTLS_SRTP_AES128_CM_HMAC_SHA1_80,
    SRTP_PROFILE_AES128_CM_HMAC_SHA1_32 = MBEDTLS_SRTP_AES128_CM_HMAC_SHA1_32,
+#else
+#error "A Crypto implementation is required."
 #endif
 } SRTP_PROFILE;
 
@@ -100,6 +102,8 @@ typedef struct {
     BYTE randBytes[2 * MAX_DTLS_RANDOM_BYTES_LEN];
     mbedtls_tls_prf_types tlsProfile;
 } TlsKeys, *PTlsKeys;
+#else
+#error "A Crypto implementation is required."
 #endif
 
 typedef struct __DtlsSession DtlsSession, *PDtlsSession;
@@ -133,6 +137,8 @@ struct __DtlsSession {
     mbedtls_ssl_config sslCtxConfig;
     mbedtls_ssl_context sslCtx;
     DtlsSessionCertificateInfo certificates[MAX_RTCCONFIGURATION_CERTIFICATES];
+#else
+#error "A Crypto implementation is required."
 #endif
 };
 
@@ -208,6 +214,8 @@ INT32 dtlsSessionKeyDerivationCallback(PVOID,
                                 const unsigned char[MAX_DTLS_RANDOM_BYTES_LEN],
                                 const unsigned char[MAX_DTLS_RANDOM_BYTES_LEN],
                                 mbedtls_tls_prf_types);
+#else
+#error "A Crypto implementation is required."
 #endif
 
 #ifdef  __cplusplus

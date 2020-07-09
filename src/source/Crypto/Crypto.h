@@ -45,7 +45,8 @@ extern "C" {
             DLOGW("%s failed with %s", (s), __mbedtlsErr); \
         } \
     } while(0)
-
+#else
+#error "A Crypto implementation is required."
 #endif
 
 #ifdef  __cplusplus
