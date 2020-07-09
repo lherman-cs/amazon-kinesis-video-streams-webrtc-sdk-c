@@ -511,10 +511,10 @@ STATUS dtlsSessionPopulateKeyingMaterial(PDtlsSession pDtlsSession, PDtlsKeyingM
     negotiatedSRTPProfile = mbedtls_ssl_get_dtls_srtp_protection_profile(&pDtlsSession->sslCtx);
     switch (negotiatedSRTPProfile) {
         case MBEDTLS_SRTP_AES128_CM_HMAC_SHA1_80:
-            pDtlsKeyingMaterial->srtpProfile = SRTP_PROFILE_AES128_CM_HMAC_SHA1_80;
+            pDtlsKeyingMaterial->srtpProfile = KVS_SRTP_PROFILE_AES128_CM_HMAC_SHA1_80;
             break;
         case MBEDTLS_SRTP_AES128_CM_HMAC_SHA1_32:
-            pDtlsKeyingMaterial->srtpProfile = SRTP_PROFILE_AES128_CM_HMAC_SHA1_32;
+            pDtlsKeyingMaterial->srtpProfile = KVS_SRTP_PROFILE_AES128_CM_HMAC_SHA1_32;
             break;
         default:
             CHK(FALSE, STATUS_SSL_UNKNOWN_SRTP_PROFILE);

@@ -27,6 +27,10 @@ extern "C" {
         } \
     }
 
+typedef enum {
+   KVS_SRTP_PROFILE_AES128_CM_HMAC_SHA1_80 = SRTP_AES128_CM_SHA1_80,
+   KVS_SRTP_PROFILE_AES128_CM_HMAC_SHA1_32 = SRTP_AES128_CM_SHA1_32,
+} KVS_SRTP_PROFILE;
 #elif KVS_USE_MBEDTLS
 #define KVS_RSA_F4                        0x10001L
 #define KVS_MD5_DIGEST_LENGTH             16
@@ -45,6 +49,11 @@ extern "C" {
             DLOGW("%s failed with %s", (s), __mbedtlsErr); \
         } \
     } while(0)
+
+typedef enum {
+   KVS_SRTP_PROFILE_AES128_CM_HMAC_SHA1_80 = MBEDTLS_SRTP_AES128_CM_HMAC_SHA1_80,
+   KVS_SRTP_PROFILE_AES128_CM_HMAC_SHA1_32 = MBEDTLS_SRTP_AES128_CM_HMAC_SHA1_32,
+} KVS_SRTP_PROFILE;
 #else
 #error "A Crypto implementation is required."
 #endif

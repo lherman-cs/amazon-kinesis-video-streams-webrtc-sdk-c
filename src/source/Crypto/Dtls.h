@@ -35,18 +35,6 @@ extern "C" {
 #define HUNDREDS_OF_NANOS_IN_A_DAY          (HUNDREDS_OF_NANOS_IN_AN_HOUR * 24LL)
 
 typedef enum {
-#ifdef KVS_USE_OPENSSL
-   SRTP_PROFILE_AES128_CM_HMAC_SHA1_80 = SRTP_AES128_CM_SHA1_80,
-   SRTP_PROFILE_AES128_CM_HMAC_SHA1_32 = SRTP_AES128_CM_SHA1_32,
-#elif KVS_USE_MBEDTLS
-   SRTP_PROFILE_AES128_CM_HMAC_SHA1_80 = MBEDTLS_SRTP_AES128_CM_HMAC_SHA1_80,
-   SRTP_PROFILE_AES128_CM_HMAC_SHA1_32 = MBEDTLS_SRTP_AES128_CM_HMAC_SHA1_32,
-#else
-#error "A Crypto implementation is required."
-#endif
-} SRTP_PROFILE;
-
-typedef enum {
     NEW,
     CONNECTING, /* DTLS is in the process of negotiating a secure connection and verifying the remote fingerprint. */
     CONNECTED,  /* DTLS has completed negotiation of a secure connection and verified the remote fingerprint. */
@@ -74,7 +62,7 @@ typedef struct {
   BYTE serverWriteKey[MAX_SRTP_MASTER_KEY_LEN + MAX_SRTP_SALT_KEY_LEN];
   UINT8 key_length;
 
-  SRTP_PROFILE srtpProfile;
+  KVS_SRTP_PROFILE srtpProfile;
 } DtlsKeyingMaterial, *PDtlsKeyingMaterial;
 
 #ifdef KVS_USE_OPENSSL

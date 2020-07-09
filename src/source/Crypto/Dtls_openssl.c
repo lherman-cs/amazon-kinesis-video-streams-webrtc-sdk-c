@@ -633,8 +633,8 @@ STATUS dtlsSessionPopulateKeyingMaterial(PDtlsSession pDtlsSession, PDtlsKeyingM
     MEMCPY(pDtlsKeyingMaterial->serverWriteKey + MAX_SRTP_MASTER_KEY_LEN, &keyingMaterialBuffer[offset], MAX_SRTP_SALT_KEY_LEN);
 
     switch(SSL_get_selected_srtp_profile(pDtlsSession->pSsl)->id) {
-      case SRTP_AES128_CM_SHA1_32:
-      case SRTP_AES128_CM_SHA1_80:
+      case KVS_SRTP_PROFILE_AES128_CM_HMAC_SHA1_32:
+      case KVS_SRTP_PROFILE_AES128_CM_HMAC_SHA1_80:
           pDtlsKeyingMaterial->srtpProfile = SSL_get_selected_srtp_profile(pDtlsSession->pSsl)->id;
           break;
     default:
