@@ -1,5 +1,5 @@
 /**
- * Kinesis Video Tcp
+ * Kinesis Video TLS
  */
 #define LOG_CLASS "TLS_openssl"
 #include "../Include_i.h"
