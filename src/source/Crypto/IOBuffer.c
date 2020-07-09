@@ -5,11 +5,11 @@ STATUS createIOBuffer(UINT32 initialCap, PIOBuffer* ppBuffer) {
     STATUS retStatus = STATUS_SUCCESS;
     PIOBuffer pBuffer = NULL;
 
-    pBuffer = MEMCALLOC(SIZEOF(IOBuffer), 1);
+    pBuffer = (PIOBuffer) MEMCALLOC(SIZEOF(IOBuffer), 1);
     CHK(pBuffer != NULL, STATUS_NOT_ENOUGH_MEMORY);
 
     if (initialCap != 0) {
-        pBuffer->raw = MEMALLOC(initialCap);
+        pBuffer->raw = (PBYTE) MEMALLOC(initialCap);
         CHK(pBuffer->raw != NULL, STATUS_NOT_ENOUGH_MEMORY);
         pBuffer->cap = initialCap;
     }

@@ -13,7 +13,7 @@ STATUS createTlsSession(PTlsSessionCallbacks pCallbacks, PTlsSession *ppTlsSessi
     CHK(ppTlsSession != NULL && pCallbacks != NULL, STATUS_NULL_ARG);
     CHK(pCallbacks->outboundPacketFn != NULL, STATUS_NULL_ARG);
 
-    pTlsSession = MEMCALLOC(1, SIZEOF(TlsSession));
+    pTlsSession = (PTlsSession) MEMCALLOC(1, SIZEOF(TlsSession));
     CHK(pTlsSession != NULL, STATUS_NOT_ENOUGH_MEMORY);
 
     CHK_STATUS(createIOBuffer(DEFAULT_MTU_SIZE, &pTlsSession->pReadBuffer));
