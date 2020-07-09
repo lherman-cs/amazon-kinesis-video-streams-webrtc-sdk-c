@@ -533,7 +533,6 @@ STATUS dtlsSessionShutdown(PDtlsSession pDtlsSession)
 {
     STATUS retStatus = STATUS_SUCCESS;
     BOOL locked = FALSE;
-    INT32 sslRet;
 
     CHK(pDtlsSession != NULL, STATUS_NULL_ARG);
 
@@ -542,8 +541,10 @@ STATUS dtlsSessionShutdown(PDtlsSession pDtlsSession)
 
     CHK(!ATOMIC_LOAD_BOOL(&pDtlsSession->shutdown), retStatus);
 
-    do sslRet = mbedtls_ssl_close_notify(&pDtlsSession->sslCtx);
-    while (sslRet == MBEDTLS_ERR_SSL_WANT_WRITE);
+    while (mbedtls_ssl_close_notify(&pDtlsSession->sslCtx) == MBEDTLS_ERR_SSL_WANT_WRITE) {
+        // keep flushing outgoing buffer until nothing left
+    }
+
 
     ATOMIC_STORE_BOOL(&pDtlsSession->shutdown, TRUE);
     CHK_STATUS(dtlsSessionChangeState(pDtlsSession, CLOSED));

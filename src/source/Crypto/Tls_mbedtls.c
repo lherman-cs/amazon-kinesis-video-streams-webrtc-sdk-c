@@ -229,8 +229,9 @@ STATUS tlsSessionShutdown(PTlsSession pTlsSession)
     CHK(pTlsSession != NULL, STATUS_NULL_ARG);
     CHK(pTlsSession->state != TLS_SESSION_STATE_CLOSED, retStatus);
 
-    do sslRet = mbedtls_ssl_close_notify(&pTlsSession->sslCtx);
-    while (sslRet == MBEDTLS_ERR_SSL_WANT_WRITE);
+    while (mbedtls_ssl_close_notify(&pTlsSession->sslCtx) == MBEDTLS_ERR_SSL_WANT_WRITE) {
+        // keep flushing outgoing buffer until nothing left
+    }
     CHK_STATUS(tlsSessionChangeState(pTlsSession, TLS_SESSION_STATE_CLOSED));
 
 CleanUp:
