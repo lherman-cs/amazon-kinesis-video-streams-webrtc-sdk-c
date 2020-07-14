@@ -84,7 +84,8 @@ struct __SampleStreamingSession {
     volatile ATOMIC_BOOL sdpOfferAnswerExchanged;
     volatile SIZE_T frameIndex;
     PRtcPeerConnection pPeerConnection;
-    PRtcRtpTransceiver pVideoRtcRtpTransceiver;
+    PRtcRtpTransceiver pVideoRtcRtpTransceiver_0;
+    PRtcRtpTransceiver pVideoRtcRtpTransceiver_1;
     PRtcRtpTransceiver pAudioRtcRtpTransceiver;
     RtcSessionDescriptionInit answerSessionDescriptionInit;
     PSampleConfiguration pSampleConfiguration;

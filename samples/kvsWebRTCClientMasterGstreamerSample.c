@@ -74,19 +74,38 @@ GstFlowReturn on_new_sample(GstElement *sink, gpointer data, UINT64 trackid)
                     frame.decodingTs = frame.presentationTs;
                     pSampleStreamingSession->audioTimestamp += SAMPLE_AUDIO_FRAME_DURATION; // assume audio frame size is 20ms, which is default in opusenc
 
+                    status = writeFrame(pRtcRtpTransceiver, &frame);
+                    if (status != STATUS_SUCCESS) {
+                        #ifdef VERBOSE
+                            printf("writeFrame() failed with 0x%08x", status);
+                        #endif
+                    }
+
                 } else {
-                    pRtcRtpTransceiver = pSampleStreamingSession->pVideoRtcRtpTransceiver;
                     frame.presentationTs = pSampleStreamingSession->videoTimestamp;
                     frame.decodingTs = frame.presentationTs;
                     pSampleStreamingSession->videoTimestamp += SAMPLE_VIDEO_FRAME_DURATION; // assume video fps is 30
+
+                    // Write to stream 0
+                    pRtcRtpTransceiver = pSampleStreamingSession->pVideoRtcRtpTransceiver_0;
+                    status = writeFrame(pRtcRtpTransceiver, &frame);
+                    if (status != STATUS_SUCCESS) {
+                        #ifdef VERBOSE
+                            printf("writeFrame() failed with 0x%08x", status);
+                        #endif
+                    }
+
+                    // Write to stream 1
+                    pRtcRtpTransceiver = pSampleStreamingSession->pVideoRtcRtpTransceiver_1;
+                    status = writeFrame(pRtcRtpTransceiver, &frame);
+                    if (status != STATUS_SUCCESS) {
+                        #ifdef VERBOSE
+                            printf("writeFrame() failed with 0x%08x", status);
+                        #endif
+                    }
+
                 }
 
-                status = writeFrame(pRtcRtpTransceiver, &frame);
-                if (status != STATUS_SUCCESS) {
-                    #ifdef VERBOSE
-                        printf("writeFrame() failed with 0x%08x", status);
-                    #endif
-                }
             }
             ATOMIC_DECREMENT(&pSampleConfiguration->streamingSessionListReadingThreadCount);
         }

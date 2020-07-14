@@ -227,7 +227,7 @@ PVOID sendVideoPackets(PVOID args)
         if (!ATOMIC_LOAD_BOOL(&pSampleConfiguration->updatingSampleStreamingSessionList)) {
             ATOMIC_INCREMENT(&pSampleConfiguration->streamingSessionListReadingThreadCount);
             for (i = 0; i < pSampleConfiguration->streamingSessionCount; ++i) {
-                status = writeFrame(pSampleConfiguration->sampleStreamingSessionList[i]->pVideoRtcRtpTransceiver, &frame);
+                status = writeFrame(pSampleConfiguration->sampleStreamingSessionList[i]->pVideoRtcRtpTransceiver_0, &frame);
                 if (status != STATUS_SUCCESS) {
                     #ifdef VERBOSE
                         printf("writeFrame() failed with 0x%08x", status);

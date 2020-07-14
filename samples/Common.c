@@ -456,14 +456,26 @@ STATUS createSampleStreamingSession(PSampleConfiguration pSampleConfiguration, P
     // Add a SendRecv Transceiver of type video
     videoTrack.kind = MEDIA_STREAM_TRACK_KIND_VIDEO;
     videoTrack.codec = RTC_CODEC_H264_PROFILE_42E01F_LEVEL_ASYMMETRY_ALLOWED_PACKETIZATION_MODE;
-    STRCPY(videoTrack.streamId, "myKvsVideoStream");
-    STRCPY(videoTrack.trackId, "myVideoTrack");
+
+    STRCPY(videoTrack.streamId, "myKvsVideoStream0");
+    STRCPY(videoTrack.trackId, "myVideoTrack0");
     CHK_STATUS(addTransceiver(pSampleStreamingSession->pPeerConnection,
                               &videoTrack,
                               NULL,
-                              &pSampleStreamingSession->pVideoRtcRtpTransceiver));
+                              &pSampleStreamingSession->pVideoRtcRtpTransceiver_0));
 
-    CHK_STATUS(transceiverOnBandwidthEstimation(pSampleStreamingSession->pVideoRtcRtpTransceiver,
+    CHK_STATUS(transceiverOnBandwidthEstimation(pSampleStreamingSession->pVideoRtcRtpTransceiver_0,
+                       (UINT64) pSampleStreamingSession,
+                       sampleBandwidthEstimationHandler));
+
+    CHK_STATUS(addTransceiver(pSampleStreamingSession->pPeerConnection,
+                              &videoTrack,
+                              NULL,
+                              &pSampleStreamingSession->pVideoRtcRtpTransceiver_1));
+
+    STRCPY(videoTrack.streamId, "myKvsVideoStream1");
+    STRCPY(videoTrack.trackId, "myVideoTrack1");
+    CHK_STATUS(transceiverOnBandwidthEstimation(pSampleStreamingSession->pVideoRtcRtpTransceiver_1,
                        (UINT64) pSampleStreamingSession,
                        sampleBandwidthEstimationHandler));
 
