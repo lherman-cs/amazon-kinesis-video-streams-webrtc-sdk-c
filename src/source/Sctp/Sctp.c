@@ -140,6 +140,7 @@ STATUS freeSctpSession(PSctpSession* ppSctpSession)
     CHK(pSctpSession != NULL, retStatus);
 
     usrsctp_deregister_address(pSctpSession);
+    DLOGI("CLOSING SCTP SESSION");
     /* handle issue mentioned here: https://github.com/sctplab/usrsctp/issues/147
      * the change in shutdownStatus will trigger onSctpOutboundPacket to return -1 */
     ATOMIC_STORE(&pSctpSession->shutdownStatus, SCTP_SESSION_SHUTDOWN_INITIATED);
@@ -170,6 +171,7 @@ STATUS sctpSessionWriteMessage(PSctpSession pSctpSession, UINT32 streamId, BOOL 
     ENTERS();
     STATUS retStatus = STATUS_SUCCESS;
     struct sctp_sendv_spa spa;
+    ssize_t err;
 
     CHK(pSctpSession != NULL && pMessage != NULL, STATUS_NULL_ARG);
 
@@ -178,7 +180,12 @@ STATUS sctpSessionWriteMessage(PSctpSession pSctpSession, UINT32 streamId, BOOL 
     spa.sendv_sndinfo.snd_sid = streamId;
 
     putInt32((PINT32) &spa.sendv_sndinfo.snd_ppid, isBinary ? SCTP_PPID_BINARY : SCTP_PPID_STRING);
-    CHK(usrsctp_sendv(pSctpSession->socket, pMessage, pMessageLen, NULL, 0, &spa, SIZEOF(spa), SCTP_SENDV_SPA, 0) > 0, STATUS_INTERNAL_ERROR);
+    err = usrsctp_sendv(pSctpSession->socket, pMessage, pMessageLen, NULL, 0, &spa, SIZEOF(spa), SCTP_SENDV_SPA, 0);
+    if (err <= 0) {
+        perror("sctp");
+        DLOGI("SCTP FAILED WITH: %d", err);
+    }
+    CHK(err > 0, STATUS_INTERNAL_ERROR);
 
 CleanUp:
     LEAVES();

@@ -15,6 +15,7 @@ option(BUILD_LIBSRTP_DESTINATION_PLATFORM "If buildng LibSRTP what is the destin
 
 # Developer Flags
 option(BUILD_TEST "Build the testing tree." OFF)
+option(BUILD_BENCHMARK "Build the benchmark tree." OFF)
 option(CODE_COVERAGE "Enable coverage reporting" OFF)
 option(COMPILER_WARNINGS "Enable all compiler warnings." OFF)
 option(ADDRESS_SANITIZER "Build with AddressSanitizer." OFF)
@@ -96,7 +97,11 @@ if(BUILD_DEPENDENCIES)
 
   build_dependency(usrsctp)
   if(BUILD_TEST)
-   build_dependency(gtest)
+    build_dependency(gtest)
+  endif()
+
+  if(BUILD_BENCHMARK)
+    build_dependency(benchmark)
   endif()
 
   # building kvsCommonLws also builds kvspic
@@ -314,6 +319,10 @@ endif()
 
 if(BUILD_TEST)
   add_subdirectory(tst)
+endif()
+
+if(BUILD_BENCHMARK)
+  add_subdirectory(bench)
 endif()
 
 install(TARGETS kvsWebrtcClient kvsWebrtcSignalingClient kvsWebrtcClientMaster kvsWebrtcClientViewer discoverNatBehavior
