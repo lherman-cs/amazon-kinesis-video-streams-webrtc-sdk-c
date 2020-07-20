@@ -18,8 +18,8 @@ script:
   - export AWS_KVS_LOG_LEVEL=3
   - make -j
   - ulimit -c unlimited -S
-  - timeout --signal=SIGABRT 60m ./bench/webrtc_client_bench
-  - timeout --signal=SIGABRT 60m ./bench/webrtc_client_bench
+  - timeout --signal=SIGABRT 60m ./bench/webrtc_client_benchmark
+  - timeout --signal=SIGABRT 60m ./bench/webrtc_client_benchmark
 
 after_failure:
   - for i in $(find ./ -maxdepth 1 -name 'core*' -print); do gdb $(pwd)/tst/webrtc_client_test core* -ex "thread apply all bt" -ex "set pagination 0" -batch; done;
