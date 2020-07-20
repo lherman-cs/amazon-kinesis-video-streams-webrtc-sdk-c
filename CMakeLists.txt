@@ -42,6 +42,7 @@ message(STATUS "dependencies install path is ${OPEN_SRC_INSTALL_PREFIX}")
 # pass ca cert location to sdk
 add_definitions(-DKVS_CA_CERT_PATH="${CMAKE_SOURCE_DIR}/certs/cert.pem")
 add_definitions(-DCMAKE_DETECTED_CACERT_PATH)
+add_definitions(-DSCTP_DEBUG)
 
 if(USE_OPENSSL)
   add_definitions(-DKVS_USE_OPENSSL)
