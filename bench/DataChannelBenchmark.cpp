@@ -9,7 +9,6 @@ namespace webrtcclient {
 class DataChannelBenchmark : public WebRtcClientBenchmarkBase {
 };
 
-/*
 BENCHMARK_DEFINE_F(DataChannelBenchmark, BM_DataChannel)(benchmark::State& state)
 {
     RtcConfiguration configuration;
@@ -28,6 +27,7 @@ BENCHMARK_DEFINE_F(DataChannelBenchmark, BM_DataChannel)(benchmark::State& state
     auto onDataChannel = [](UINT64 customData, PRtcDataChannel pRtcDataChannel) {
         UNUSED_PARAM(pRtcDataChannel);
         DLOGI("ON DATA CHANNEL");
+        dataChannelOnMessage(pRtcDataChannel, 0, [](UINT64, PRtcDataChannel, BOOL, PBYTE, UINT32) {});
         ATOMIC_STORE_BOOL((PSIZE_T) customData, TRUE);
     };
 
@@ -69,8 +69,8 @@ BENCHMARK_DEFINE_F(DataChannelBenchmark, BM_DataChannel)(benchmark::State& state
 }
 
 BENCHMARK_REGISTER_F(DataChannelBenchmark, BM_DataChannel)->Range(8, 8 << 2);
-*/
 
+/*
 BENCHMARK_DEFINE_F(DataChannelBenchmark, BM_DataChannel)(benchmark::State& state)
 {
     char* src = new char[state.range(0)];
@@ -84,6 +84,7 @@ BENCHMARK_DEFINE_F(DataChannelBenchmark, BM_DataChannel)(benchmark::State& state
 }
 
 BENCHMARK_REGISTER_F(DataChannelBenchmark, BM_DataChannel)->Range(8, 8 << 10)->MeasureProcessCPUTime()->UseRealTime();
+*/
 
 } // namespace webrtcclient
 } // namespace video
