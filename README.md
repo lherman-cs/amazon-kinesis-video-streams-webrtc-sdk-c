@@ -1,6 +1,5 @@
 <h1 align="center">
   Amazon Kinesis Video Streams C WebRTC SDK
-  <br>
 </h1>
 
 <h4 align="center">Pure C WebRTC Client for Amazon Kinesis Video Streams </h4>
