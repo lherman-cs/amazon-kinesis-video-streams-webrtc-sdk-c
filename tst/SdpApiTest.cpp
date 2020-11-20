@@ -17,34 +17,20 @@ class SdpApiTest : public WebRtcClientTestBase {
  * Parameter expected in certain SDP API tests. First parameter is a filename.
  * Second parameter is a string that is expected to match in the SDP answer.
  */
-using SdpMatch = std::tuple<std::string, std::string>;
+using SdpMatch = std::tuple<CHAR const*, CHAR const*>;
 
 /*
  * Processes SDP API entries from file.
  */
 class SdpApiTest_SdpMatch : public WebRtcClientTestBase, public ::testing::WithParamInterface<SdpMatch> {
   protected:
-    const std::string& filename()
+    CHAR const* filename()
     {
         return std::get<0>(GetParam());
     }
-    const std::string& match()
+    CHAR const* match()
     {
         return std::get<1>(GetParam());
-    }
-    const std::string sdpOffer()
-    {
-        return fileToString(filename());
-    }
-
-  private:
-    static std::string fileToString(const std::string& filename)
-    {
-        std::ifstream in_file;
-        std::ostringstream out;
-        in_file.open(filename);
-        out << in_file.rdbuf();
-        return out.str();
     }
 };
 
@@ -962,8 +948,13 @@ a=rtpmap:102 H264/90000
 
 TEST_P(SdpApiTest_SdpMatch, populateSingleMediaSection_TestH264Fmtp)
 {
-    const std::string offer = sdpOffer();
-    PCHAR sdp = const_cast<PCHAR>(offer.c_str());
+    UINT64 sdpSize;
+    PCHAR pSdp;
+
+    ASSERT_EQ(STATUS_SUCCESS, readFile((PCHAR) filename(), TRUE, NULL, &sdpSize));
+    pSdp = (PCHAR) MEMALLOC(sdpSize);
+    ASSERT_TRUE(pSdp != NULL);
+    ASSERT_EQ(STATUS_SUCCESS, readFile((PCHAR) filename(), TRUE, (PBYTE) pSdp, &sdpSize));
 
     PRtcPeerConnection pRtcPeerConnection = NULL;
     PRtcRtpTransceiver transceiver1 = NULL;
@@ -986,16 +977,17 @@ TEST_P(SdpApiTest_SdpMatch, populateSingleMediaSection_TestH264Fmtp)
     STRCPY(track1.trackId, "myVideo");
     EXPECT_EQ(addTransceiver(pRtcPeerConnection, &track1, &rtcRtpTransceiverInit, &transceiver1), STATUS_SUCCESS);
 
-    STRCPY(rtcSessionDescriptionInit.sdp, (PCHAR) sdp);
+    STRCPY(rtcSessionDescriptionInit.sdp, pSdp);
     rtcSessionDescriptionInit.type = SDP_TYPE_OFFER;
     EXPECT_EQ(setRemoteDescription(pRtcPeerConnection, &rtcSessionDescriptionInit), STATUS_SUCCESS);
     EXPECT_EQ(createAnswer(pRtcPeerConnection, &rtcSessionDescriptionInit), STATUS_SUCCESS);
 
     EXPECT_PRED_FORMAT2(testing::IsSubstring, match(), rtcSessionDescriptionInit.sdp) << "Offer:\n"
-                                                                                      << sdp << "\nAnswer:\n"
+                                                                                      << pSdp << "\nAnswer:\n"
                                                                                       << rtcSessionDescriptionInit.sdp;
     closePeerConnection(pRtcPeerConnection);
     freePeerConnection(&pRtcPeerConnection);
+    MEMFREE(pSdp);
 }
 
 INSTANTIATE_TEST_CASE_P(SdpApiTest_SdpMatch_Chrome, SdpApiTest_SdpMatch,
@@ -1011,7 +1003,7 @@ INSTANTIATE_TEST_CASE_P(SdpApiTest_SdpMatch_Chrome, SdpApiTest_SdpMatch,
                             SdpMatch{
                                 "tst/SDP/offers/1v1a1d-chrome-android.txt",
                                 "level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e015",
-                            }));
+                            }), ); // the last comma is used to silent a warning
 
 INSTANTIATE_TEST_CASE_P(SdpApiTest_SdpMatch_Firefox, SdpApiTest_SdpMatch,
                         ::testing::Values(
@@ -1022,19 +1014,19 @@ INSTANTIATE_TEST_CASE_P(SdpApiTest_SdpMatch_Firefox, SdpApiTest_SdpMatch,
                             SdpMatch{
                                 "tst/SDP/offers/1v1a1d-firefox-mac.txt",
                                 "profile-level-id=42e01f;level-asymmetry-allowed=1;packetization-mode=1",
-                            }));
+                            }), );
 
 INSTANTIATE_TEST_CASE_P(SdpApiTest_SdpMatch_Chromium, SdpApiTest_SdpMatch,
                         ::testing::Values(SdpMatch{
                             "tst/SDP/offers/1v1a1d-chromium-linux.txt",
                             "level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f",
-                        }));
+                        }), );
 
 INSTANTIATE_TEST_CASE_P(SdpApiTest_SdpMatch_Safari, SdpApiTest_SdpMatch,
                         ::testing::Values(SdpMatch{
                             "tst/SDP/offers/1v1a1d-safari-mac.txt",
                             "level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f",
-                        }));
+                        }), );
 
 } // namespace webrtcclient
 } // namespace video
