@@ -17,14 +17,14 @@ class SdpApiTest : public WebRtcClientTestBase {
  * Parameter expected in certain SDP API tests. First parameter is a filename.
  * Second parameter is a string that is expected to match in the SDP answer.
  */
-using SdpMatch = std::tuple<CHAR const*, CHAR const*>;
+using SdpMatch = std::tuple<const std::string, CHAR const*>;
 
 /*
  * Processes SDP API entries from file.
  */
 class SdpApiTest_SdpMatch : public WebRtcClientTestBase, public ::testing::WithParamInterface<SdpMatch> {
   protected:
-    CHAR const* filename()
+    const std::string filename()
     {
         return std::get<0>(GetParam());
     }
@@ -951,10 +951,11 @@ TEST_P(SdpApiTest_SdpMatch, populateSingleMediaSection_TestH264Fmtp)
     UINT64 sdpSize;
     PCHAR pSdp;
 
-    ASSERT_EQ(STATUS_SUCCESS, readFile((PCHAR) filename(), FALSE, NULL, &sdpSize));
-    pSdp = (PCHAR) MEMALLOC(sdpSize);
+    ASSERT_EQ(STATUS_SUCCESS, readFile((PCHAR) filename().c_str(), TRUE, NULL, &sdpSize));
+    pSdp = (PCHAR) MEMALLOC(sdpSize + SIZEOF(CHAR));
     ASSERT_TRUE(pSdp != NULL);
-    ASSERT_EQ(STATUS_SUCCESS, readFile((PCHAR) filename(), FALSE, (PBYTE) pSdp, &sdpSize));
+    ASSERT_EQ(STATUS_SUCCESS, readFile((PCHAR) filename().c_str(), TRUE, (PBYTE) pSdp, &sdpSize));
+    pSdp[sdpSize] = '\0';
 
     PRtcPeerConnection pRtcPeerConnection = NULL;
     PRtcRtpTransceiver transceiver1 = NULL;
