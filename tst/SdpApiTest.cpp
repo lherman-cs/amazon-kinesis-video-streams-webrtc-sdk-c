@@ -951,10 +951,10 @@ TEST_P(SdpApiTest_SdpMatch, populateSingleMediaSection_TestH264Fmtp)
     UINT64 sdpSize;
     PCHAR pSdp;
 
-    ASSERT_EQ(STATUS_SUCCESS, readFile((PCHAR) filename(), TRUE, NULL, &sdpSize));
+    ASSERT_EQ(STATUS_SUCCESS, readFile((PCHAR) filename(), FALSE, NULL, &sdpSize));
     pSdp = (PCHAR) MEMALLOC(sdpSize);
     ASSERT_TRUE(pSdp != NULL);
-    ASSERT_EQ(STATUS_SUCCESS, readFile((PCHAR) filename(), TRUE, (PBYTE) pSdp, &sdpSize));
+    ASSERT_EQ(STATUS_SUCCESS, readFile((PCHAR) filename(), FALSE, (PBYTE) pSdp, &sdpSize));
 
     PRtcPeerConnection pRtcPeerConnection = NULL;
     PRtcRtpTransceiver transceiver1 = NULL;
