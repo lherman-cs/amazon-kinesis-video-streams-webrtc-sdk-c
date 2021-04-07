@@ -156,6 +156,7 @@ PVOID mediaSenderRoutine(PVOID customData)
 
     CHK(!ATOMIC_LOAD_BOOL(&pSampleConfiguration->appTerminateFlag), retStatus);
 
+    printf(">>>>>>>>>>Starting media threads\n");
     if (pSampleConfiguration->videoSource != NULL) {
         THREAD_CREATE(&videoSenderTid, pSampleConfiguration->videoSource, (PVOID) pSampleConfiguration);
     }

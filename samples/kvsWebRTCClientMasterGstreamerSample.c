@@ -197,6 +197,7 @@ PVOID sendGstreamerAudioVideo(PVOID args)
     }
 
     if (appsinkVideo != NULL) {
+        printf(">>>>>>>>>>>>>>>>>>>>>>>> CONNECTED VIDEO SINK\n");
         g_signal_connect(appsinkVideo, "new-sample", G_CALLBACK(on_new_sample_video), (gpointer) pSampleConfiguration);
     }
 
@@ -207,6 +208,7 @@ PVOID sendGstreamerAudioVideo(PVOID args)
     gst_element_set_state(pipeline, GST_STATE_PLAYING);
 
     /* block until error or EOS */
+    printf("RUNNING PIPELINE!!\n");
     bus = gst_element_get_bus(pipeline);
     msg = gst_bus_timed_pop_filtered(bus, GST_CLOCK_TIME_NONE, GST_MESSAGE_ERROR | GST_MESSAGE_EOS);
 
@@ -228,21 +230,26 @@ CleanUp:
     return (PVOID)(ULONG_PTR) retStatus;
 }
 
-VOID onGstAudioFrameReady(UINT64 customData, PFrame pFrame)
+VOID onGstFrameReady(UINT64 customData, PFrame pFrame)
 {
     GstFlowReturn ret;
     GstBuffer* buffer;
-    GstElement* appsrcAudio = (GstElement*) customData;
+    GstElement* appsrc = (GstElement*) customData;
 
     /* Create a new empty buffer */
     buffer = gst_buffer_new_and_alloc(pFrame->size);
     gst_buffer_fill(buffer, 0, pFrame->frameData, pFrame->size);
 
     /* Push the buffer into the appsrc */
-    g_signal_emit_by_name(appsrcAudio, "push-buffer", buffer, &ret);
+    g_signal_emit_by_name(appsrc, "push-buffer", buffer, &ret);
 
     /* Free the buffer now that we are done with it */
     gst_buffer_unref(buffer);
+}
+
+VOID onGstVideoFrameReady(UINT64 customData, PFrame pFrame)
+{
+    onGstFrameReady(customData, pFrame);
 }
 
 VOID onSampleStreamingSessionShutdown(UINT64 customData, PSampleStreamingSession pSampleStreamingSession)
@@ -256,8 +263,9 @@ VOID onSampleStreamingSessionShutdown(UINT64 customData, PSampleStreamingSession
 
 PVOID receiveGstreamerAudioVideo(PVOID args)
 {
+    printf(">>>>>>>>>>>>>>>>>>>>>> RECEIVE PIPELINE\n");
     STATUS retStatus = STATUS_SUCCESS;
-    GstElement *pipeline = NULL, *appsrcAudio = NULL;
+    GstElement *pipeline = NULL, *appsrcAudio = NULL, *appsrcVideo = NULL;
     GstBus* bus;
     GstMessage* msg;
     GError* error = NULL;
@@ -270,6 +278,14 @@ PVOID receiveGstreamerAudioVideo(PVOID args)
     }
 
     // TODO: Wire video up with gstreamer pipeline
+    videoDescription = "appsrc name=appsrc-video ! h264parse ! decodebin ! videoconvert ! autovideosink";
+    // switch (pSampleStreamingSession->pVideoRtcRtpTransceiver->receiver.track.codec) {
+    //     case RTC_CODEC_H264_PROFILE_42E01F_LEVEL_ASYMMETRY_ALLOWED_PACKETIZATION_MODE:
+    //         break;
+    //     default:
+    //         printf("WARNING: Invalid codec\n");
+    //         break;
+    // }
 
     switch (pSampleStreamingSession->pAudioRtcRtpTransceiver->receiver.track.codec) {
         case RTC_CODEC_OPUS:
@@ -294,7 +310,14 @@ PVOID receiveGstreamerAudioVideo(PVOID args)
         goto CleanUp;
     }
 
-    transceiverOnFrame(pSampleStreamingSession->pAudioRtcRtpTransceiver, (UINT64) appsrcAudio, onGstAudioFrameReady);
+    appsrcVideo = gst_bin_get_by_name(GST_BIN(pipeline), "appsrc-video");
+    if (appsrcVideo == NULL) {
+        printf("[KVS GStreamer Master] gst_bin_get_by_name(): cant find appsrc, operation returned status code: 0x%08x \n", STATUS_INTERNAL_ERROR);
+        goto CleanUp;
+    }
+
+    transceiverOnFrame(pSampleStreamingSession->pVideoRtcRtpTransceiver, (UINT64) appsrcVideo, onGstVideoFrameReady);
+    transceiverOnFrame(pSampleStreamingSession->pAudioRtcRtpTransceiver, (UINT64) appsrcAudio, onGstFrameReady);
 
     retStatus = streamingSessionOnShutdown(pSampleStreamingSession, (UINT64) appsrcAudio, onSampleStreamingSessionShutdown);
     if (retStatus != STATUS_SUCCESS) {
@@ -302,6 +325,13 @@ PVOID receiveGstreamerAudioVideo(PVOID args)
         goto CleanUp;
     }
 
+    retStatus = streamingSessionOnShutdown(pSampleStreamingSession, (UINT64) appsrcVideo, onSampleStreamingSessionShutdown);
+    if (retStatus != STATUS_SUCCESS) {
+        printf("[KVS GStreamer Master] streamingSessionOnShutdown(): operation returned status code: 0x%08x \n", STATUS_INTERNAL_ERROR);
+        goto CleanUp;
+    }
+
+    printf("Generated pipeline: %s\n", audioVideoDescription);
     g_free(audioVideoDescription);
 
     if (pipeline == NULL) {
@@ -315,6 +345,7 @@ PVOID receiveGstreamerAudioVideo(PVOID args)
     /* block until error or EOS */
     bus = gst_element_get_bus(pipeline);
     msg = gst_bus_timed_pop_filtered(bus, GST_CLOCK_TIME_NONE, GST_MESSAGE_ERROR | GST_MESSAGE_EOS);
+    printf(">>>>>>>>>>>>>> PIPELINE IS DONE\n");
 
     /* Free resources */
     if (msg != NULL) {
